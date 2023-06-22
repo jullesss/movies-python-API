@@ -34,6 +34,9 @@ class UserSerializer(serializers.Serializer):
         return User.objects.create_user(**validated_data)  # type: ignore
 
     def update(self, instance: User, validated_data: dict) -> User:
+        if validated_data["password"]:
+            password = validated_data.pop("password", None)  # type: ignore
+            instance.set_password(password)
         for key, value in validated_data.items():
             setattr(instance, key, value)
 

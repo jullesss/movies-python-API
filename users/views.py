@@ -29,15 +29,11 @@ class UserView(APIView):
 
 class UserDetailView(APIView):
     authentication_classes = [JWTAuthentication]
-    # Leitura da esquerda para a direita
-    # Quando é separado por virgula, ambas as condicionais precisam ser verdadeiras
-    # Quando separado por pipe (|), apenas uma das condinais precisa ser verdadeira
-    # permission_classes = [IsBookOwner | IsAdminOrReadOnly]
     permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
     def get(self, request: Request, user_id=int) -> Response:
         user = get_object_or_404(User, pk=user_id)
-
+        self.check_object_permissions(request, user)
         serializer = UserSerializer(user)
 
         return Response(serializer.data, status.HTTP_200_OK)
