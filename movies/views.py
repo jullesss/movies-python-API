@@ -10,9 +10,10 @@ from users.permissions import IsAdminOrReadOnly
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
 
 
-class LoginViewOld(APIView):
+class LoginView(APIView):
     def post(self, request: Request) -> Response:  # type: ignore
         serializer = LoginSerializer(data=request.data)  # type: ignore
         serializer.is_valid(raise_exception=True)  # type: ignore
@@ -32,16 +33,17 @@ class LoginViewOld(APIView):
         return Response(token_dict, status.HTTP_200_OK)
 
 
-class MovieView(APIView):
+class MovieView(APIView, PageNumberPagination):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminOrReadOnly]
 
     def get(self, request: Request) -> Response:
         movies = Movie.objects.all()
 
-        serializer = MovieSerializer(movies, many=True)
+        result_page = self.paginate_queryset(movies, request)  # type: ignore
+        serializer = MovieSerializer(instance=result_page, many=True)
 
-        return Response(serializer.data, status.HTTP_200_OK)
+        return self.get_paginated_response(serializer.data)  # type: ignore
 
     def post(self, request: Request) -> Response:
         serializer = MovieSerializer(data=request.data)  # type: ignore
